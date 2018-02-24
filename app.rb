@@ -3,13 +3,14 @@ require 'slack-notifier'
 
 set :logging, true
 set :run, true
+set :bind, '0.0.0.0'
 
 use Rack::Auth::Basic, "Authentication failed" do |username, password|
-  username == 'deploy' and password == ENV['AUTHENTICATION_SECRET']
+  username == 'deploy' and password == ENV.fetch('AUTHENTICATION_SECRET', 'deploy')
 end
 
 get '/redeploy' do
-  notify(redeploy_app)
+  notify(redeploy)
 end
 
 get '/update/:service_name' do
@@ -52,6 +53,6 @@ end
 
 def notify(message)
   logger.info(message)
-  slack.ping(message)
+  slack&.ping(message)
 end
 

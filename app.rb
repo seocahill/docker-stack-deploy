@@ -1,5 +1,8 @@
 require 'sinatra'
 
+set :logging, true
+set :run, true
+
 use Rack::Auth::Basic, "Authentication failed" do |username, password|
   username == 'deploy' and password == ENV['AUTHENTICATION_SECRET']
 end
@@ -54,6 +57,7 @@ def update(params)
 end
 
 def notify(message)
-
+  logger.info(message)
+  # slack
 end
 

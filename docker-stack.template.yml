@@ -1,0 +1,22 @@
+version: "3.5"
+
+services:
+  deployer:
+    image: seocahill/docker_swarm_update
+    secrets:
+      - docker_stack.yml
+      - docker_config.json
+    environment:
+      - AUTHENTICATION_SECRET=my-basic-auth-password
+      - ALLOWED_SERVICES=my-ruby-service,my-python-service,my-node-service
+      - SLACK_API_KEY=my-boards-key
+      - APP_ENV=production
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+secrets:
+  - docker_stack.yml:
+      file: docker_stack.yml
+  - docker_config.json:
+      file: docker_config.json
+  

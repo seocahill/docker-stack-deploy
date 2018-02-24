@@ -9,21 +9,12 @@ use Rack::Auth::Basic, "Authentication failed" do |username, password|
 end
 
 get '/redeploy' do
-  if login
-    message = redeploy_app
-    notify(message)
-  else
-    notify("Login failed")
-  end
+  notify(redeploy_app)
 end
 
 get '/update/:service_name'
-  if login
-    message = update_service
-    notify(message)
-  else
-    notify("Login failed")
-  end
+  message = update_service(params['service_name'])
+  notify(message)
 end
 
 private
@@ -43,9 +34,7 @@ def login
   $?.exitstatus == 0
 end
 
-def update(params)
-  service = params['service_name']
-
+def update(service)
   raise unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
 
   system "docker service update --force #{service}"

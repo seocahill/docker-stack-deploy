@@ -53,6 +53,6 @@ end
 
 def notify(message)
   logger.info(message)
-  slack&.ping(message)
+  slack.ping(message)
 end
 

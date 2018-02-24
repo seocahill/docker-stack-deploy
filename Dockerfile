@@ -11,8 +11,10 @@ RUN \
   curl \
   docker \
   openrc \
+  && mkdir /root/.docker \
   && rc-update add docker boot
 
 COPY app.rb .
+COPY run.sh .
 
-CMD ruby app.rb
+CMD ash run.sh

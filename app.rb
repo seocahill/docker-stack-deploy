@@ -12,7 +12,7 @@ get '/redeploy' do
   notify(redeploy_app)
 end
 
-get '/update/:service_name'
+get '/update/:service_name' do
   message = update_service(params['service_name'])
   notify(message)
 end

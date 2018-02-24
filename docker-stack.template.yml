@@ -5,18 +5,19 @@ services:
     image: seocahill/docker_swarm_update
     secrets:
       - docker_stack.yml
-      - docker_config.json
+      - source: docker_config.json
+        target: $HOME/.docker/config.json
     environment:
       - AUTHENTICATION_SECRET=my-basic-auth-password
       - ALLOWED_SERVICES=my-ruby-service,my-python-service,my-node-service
-      - SLACK_API_KEY=my-boards-key
+      - WEBHOOK_URL=my-slack-webhook
       - APP_ENV=production
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
 secrets:
-  - docker_stack.yml:
-      file: docker_stack.yml
-  - docker_config.json:
-      file: docker_config.json
+  docker_stack.yml:
+    file: docker_stack.yml
+  docker_config.json:
+    file: docker_config.json
   

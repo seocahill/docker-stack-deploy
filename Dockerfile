@@ -6,6 +6,7 @@ WORKDIR /app
 
 RUN \
   gem install sinatra \
+  slack-notifier \
   && apk --update --no-cache add docker \
   && rc-update add docker boot
 

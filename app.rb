@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'slack-notifier'
 
 set :logging, true
 set :run, true
@@ -56,8 +57,12 @@ def update(params)
   end
 end
 
+def slack
+  @slack ||= Slack::Notifier.new(ENV["WEBHOOK_URL"])
+end
+
 def notify(message)
   logger.info(message)
-  # slack
+  slack.ping(message)
 end
 

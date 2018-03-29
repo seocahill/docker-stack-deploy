@@ -1,23 +1,28 @@
 version: "3.5"
 
 services:
-  deployer:
-    image: seocahill/docker_swarm_update
+  cd:
+    image: seocahill/docker-swarm-deploy:latest
     secrets:
+      - basic_auth_password
       - docker_stack.yml
-      - source: docker_config.json
-        target: $HOME/.docker/config.json
+      - dockerhub_password
     environment:
-      - AUTHENTICATION_SECRET=my-basic-auth-password
       - ALLOWED_SERVICES=my-ruby-service,my-python-service,my-node-service
-      - WEBHOOK_URL=my-slack-webhook
       - APP_ENV=production
+      - DOCKER_USERNAME=my-username
+      - WEBHOOK_URL=https://hooks.slack.com/services/my-hook-id
+    ports:
+      - "4567:4567"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    command: ash run.sh
 
 secrets:
+  basic_auth_password:
+    file: basic_auth_password.txt
   docker_stack.yml:
-    file: docker_stack.yml
-  docker_config.json:
-    file: docker_config.json
+    file: docker-stack.yml
+  dockerhub_password:
+    file: dockerhub_password
   

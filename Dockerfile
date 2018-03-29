@@ -17,4 +17,6 @@ RUN \
 COPY app.rb .
 COPY run.sh .
 
+EXPOSE 4567
+
 CMD ash run.sh

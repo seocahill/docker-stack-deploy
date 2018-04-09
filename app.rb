@@ -10,7 +10,7 @@ use Rack::Auth::Basic, "Authentication failed" do |username, password|
 end
 
 get '/' do
-  message = system "docker service ls"
+  message = %x{docker service ls}
   notify(message)
   200
 end

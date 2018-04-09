@@ -12,15 +12,18 @@ end
 get '/' do
   message = system "docker service ls"
   notify(message)
+  200
 end
 
 get '/redeploy' do
   notify(redeploy)
+  200
 end
 
 get '/update/:service_name' do
   message = update(params['service_name'])
   notify(message)
+  200
 end
 
 private

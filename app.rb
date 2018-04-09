@@ -9,12 +9,17 @@ use Rack::Auth::Basic, "Authentication failed" do |username, password|
   username == 'deploy' and password == ENV.fetch('AUTHENTICATION_SECRET', 'deploy')
 end
 
+get '/' do
+  message = system "docker service ls"
+  notify(message)
+end
+
 get '/redeploy' do
   notify(redeploy)
 end
 
 get '/update/:service_name' do
-  message = update_service(params['service_name'])
+  message = update(params['service_name'])
   notify(message)
 end
 

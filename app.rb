@@ -16,14 +16,22 @@ get '/' do
 end
 
 get '/redeploy' do
-  notify(redeploy)
-  200
+  if login
+    notify(redeploy)
+    200
+  else
+    403
+  end
 end
 
 get '/update/:service_name' do
-  message = update(params['service_name'])
-  notify(message)
-  200
+  if login
+    message = update(params['service_name'])
+    notify(message)
+    200
+  else
+    403
+  end
 end
 
 private
@@ -39,7 +47,7 @@ def redeploy
 end
 
 def login 
-  system "docker login"
+  system "cat /run/secrets/dockerhub_password | docker login --username $DOCKER_USERNAME --password-stdin"
   $?.exitstatus == 0
 end
 

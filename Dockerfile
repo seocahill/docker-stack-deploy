@@ -10,6 +10,7 @@ RUN \
   && apk --update --no-cache add \
   curl \
   docker \
+  git \
   openrc \
   && mkdir /root/.docker \
   && rc-update add docker boot

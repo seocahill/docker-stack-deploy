@@ -1,6 +1,5 @@
 #! /bin/ash
 
 set -e
-mkdir /src
-git clone $APP_REPO /src
+git clone $(cat /run/secrets/github_uri) /src 
 ruby app.rb

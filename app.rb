@@ -1,34 +1,41 @@
 require 'sinatra'
 require 'slack-notifier'
+require 'open3'
 
 set :logging, true
 set :run, true
 set :bind, '0.0.0.0'
 
-use Rack::Auth::Basic, "Authentication failed" do |username, password|
-  username == 'deploy' and password == ENV.fetch('AUTHENTICATION_SECRET', 'deploy')
+before do
+  # Authenticate slack and/or CI
+  true
 end
 
-get '/' do
-  message = %x{docker service ls}
-  notify(message)
-  200
+post '/info' do
+  if service = params['text']
+    stdout, stderr, status = Open3.capture3("docker service ps #{service}")
+  else
+    stdout, stderr, status = Open3.capture3('docker service ls')
+  end
+  status.success? ? notify(stdout) : notify(stderr)
+  status
 end
 
-get '/redeploy' do
+post '/deploy' do
   if login
-    notify(redeploy)
-    200
+    status, message = redeploy
+    notify(message)
+    status
   else
     403
   end
 end
 
-get '/update/:service_name' do
+post '/update' do
   if login
-    message = update(params)
+    status, message = update(params)
     notify(message)
-    200
+    status
   else
     403
   end
@@ -37,14 +44,22 @@ end
 private
 
 def redeploy
-  system "git fetch origin"
-  system "git reset --hard origin/master"
-  system "docker stack deploy -c $STACK_CONFIG_FILE $STACK_NAME --with-registry-auth"
+  # Change to directory of cloned stack code
+  Dir.chdir('/src')
 
-  if $?.exitstatus == 0
-    "Stack was redeployed"
+  # Update config to latest and redeploy
+  command = %Q{
+    git fetch origin &&
+    git reset --hard origin/master &&
+    docker stack deploy -c $STACK_CONFIG_FILE $STACK_NAME --with-registry-auth
+  }
+
+  stdout, stderr, status = Open3.capture3(command)
+
+  if status.success?
+    [200, stdout]
   else
-    "Stack could not be re-deployed"
+    [500, stderr]
   end
 end
 
@@ -54,19 +69,22 @@ def login
 end
 
 def update(params)
-  service = params.dig('service_name')
-  raise unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
-  image = %x{docker service inspect #{service} -f {{.Spec.TaskTemplate.ContainerSpec.Image}}}.split('@').first
+  # Only update whitelisted services
+  service, tag = params.dig('text').split(':')
+  return [403, "service cannot be updated"] unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
+
+  # Apply passed in or default tag
+  current_image = %x{docker service inspect #{service} -f {{.Spec.TaskTemplate.ContainerSpec.Image}}}.split('@').first
   image_name, image_tag = current_image.split(':')
-  default_tag = ENV.fetch('DEFAULT_TAG', 'dev')
-  tag = params.fetch('tag', default_tag)
+  new_tag = tag || ENV.fetch('DEFAULT_TAG', 'dev')
 
-  system "docker service update --image #{image_name}:#{tag} --force #{service} --with-registry-auth"
+  command = "docker service update --image #{image_name}:#{new_tag} --force #{service} --with-registry-auth"
+  stdout, stderr, status = Open3.capture3(command)
 
-  if $?.exitstatus == 0
-    "Updated #{service} successfully"
+  if status.success?
+    [200, stdout]
   else
-    "Updated #{service} failed"
+    [500, stderr]
   end
 end
 

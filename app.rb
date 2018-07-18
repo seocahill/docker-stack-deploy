@@ -46,8 +46,10 @@ def deploy
   Dir.chdir('/src')
 
   # Update config to latest and redeploy
+  remote = %x{ cat /run/secrets/github_uri }
   command = %Q{
-    git fetch origin &&
+    git checkout master &&
+    git fetch #{remote} &&
     git reset --hard origin/master &&
     docker stack deploy -c $STACK_CONFIG_FILE $STACK_NAME --with-registry-auth
   }

@@ -25,7 +25,7 @@ end
 post '/deploy' do
   if login
     Thread.new { deploy }
-    [200]
+    [200, 'Working on it...']
   else
     [403, 'Error! docker login failed']
   end
@@ -34,7 +34,7 @@ end
 post '/update' do
   if login
     Thread.new { update(params) }
-    [200]
+    [200, 'Working on it...']
   else
     [403, 'Error! docker login failed']
   end

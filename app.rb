@@ -105,7 +105,7 @@ def notify(message, channel = nil)
   begin
     slack.ping(message, channel: channel)
   rescue
-    slack.ping(channel)
+    slack.ping(message)
   end
 end
 

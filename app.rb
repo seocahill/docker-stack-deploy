@@ -12,10 +12,11 @@ before do
 end
 
 post '/info' do
-  if service = params['text']
-    stdout, stderr, status = Open3.capture3("docker service ps #{service}")
-  else
+  service = params['text']
+  if service.empty?
     stdout, stderr, status = Open3.capture3('docker service ls')
+  else
+    stdout, stderr, status = Open3.capture3("docker service ps #{service}")
   end
   status.success? ? notify("```#{stdout}```") : notify(stderr)
   status

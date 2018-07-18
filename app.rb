@@ -7,8 +7,7 @@ set :run, true
 set :bind, '0.0.0.0'
 
 before do
-  #FIXME Authenticate
-  true
+  return [401, "not authenticated"] unless params.dig('token') == ENV.fetch('CD_TOKEN', 'cd')
 end
 
 post '/info' do

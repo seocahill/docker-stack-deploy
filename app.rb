@@ -7,7 +7,7 @@ set :run, true
 set :bind, '0.0.0.0'
 
 before do
-  # Authenticate slack and/or CI
+  #FIXME Authenticate
   true
 end
 
@@ -17,33 +17,31 @@ post '/info' do
   else
     stdout, stderr, status = Open3.capture3('docker service ls')
   end
-  status.success? ? notify(stdout) : notify(stderr)
+  status.success? ? notify("```#{stdout}```") : notify(stderr)
   status
 end
 
 post '/deploy' do
   if login
-    status, message = redeploy
-    notify(message)
-    status
+    Thread.new { deploy }
+    [200]
   else
-    403
+    [403, 'Error! docker login failed']
   end
 end
 
 post '/update' do
   if login
-    status, message = update(params)
-    notify(message)
-    status
+    Thread.new { update }
+    [200]
   else
-    403
+    [403, 'Error! docker login failed']
   end
 end
 
 private
 
-def redeploy
+def deploy
   # Change to directory of cloned stack code
   Dir.chdir('/src')
 
@@ -57,9 +55,9 @@ def redeploy
   stdout, stderr, status = Open3.capture3(command)
 
   if status.success?
-    [200, stdout]
+    notify("```Success! #{stdout}```")
   else
-    [500, stderr]
+    notify("```Error! #{stderr}```")
   end
 end
 
@@ -71,21 +69,25 @@ end
 def update(params)
   # Only update whitelisted services
   service, tag = params.dig('text').split(':')
-  return [403, "service cannot be updated"] unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
+  return [403, "Error! #{service} service is not whitelisted"] unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
 
   # Apply passed in or default tag
-  current_image = %x{docker service inspect #{service} -f {{.Spec.TaskTemplate.ContainerSpec.Image}}}.split('@').first
-  image_name, image_tag = current_image.split(':')
+  image_name, image_tag = current_image(service).split(':')
   new_tag = tag || ENV.fetch('DEFAULT_TAG', 'dev')
 
   command = "docker service update --image #{image_name}:#{new_tag} --force #{service} --with-registry-auth"
   stdout, stderr, status = Open3.capture3(command)
 
   if status.success?
-    [200, stdout]
+    new_image = current_image(service)
+    notify("```Success! Image was updated to #{new_image}```")
   else
-    [500, stderr]
+    notify("```Error! #{stderr}```")
   end
+end
+
+def current_image(service)
+  %x{docker service inspect #{service} -f {{.Spec.TaskTemplate.ContainerSpec.Image}}}.split('@').first
 end
 
 def slack

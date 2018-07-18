@@ -7,7 +7,7 @@ set :run, true
 set :bind, '0.0.0.0'
 
 before do
-  return if params['token'] == %x{ cat /run/secrets/auth_token }
+  return if params['token'] == %x{ cat /run/secrets/auth_token }.strip
   halt 401, "Not authorized\n"
 end
 

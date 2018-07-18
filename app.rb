@@ -13,7 +13,7 @@ end
 
 post '/info' do
   service = params['text']
-  channel = params['channel_id']
+  channel = "##{params['channel_name']}"
   if service.nil? || service.empty?
     stdout, stderr, status = Open3.capture3('docker service ls')
   else

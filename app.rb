@@ -7,7 +7,8 @@ set :run, true
 set :bind, '0.0.0.0'
 
 before do
-  return [401, "not authenticated"] unless params.dig('token') == ENV.fetch('CD_TOKEN', 'cd')
+  return unless params['token'] == %x{ cat /run/secrets/auth_token }
+  halt 401, "Not authorized\n"
 end
 
 post '/info' do
@@ -95,7 +96,7 @@ def current_image(service)
 end
 
 def slack
-  @slack ||= Slack::Notifier.new(ENV["WEBHOOK_URL"])
+  @slack ||= Slack::Notifier.new(ENV["WEBHOOK_URL"], channel: "#devops")
 end
 
 def notify(message)

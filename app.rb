@@ -102,6 +102,10 @@ end
 
 def notify(message, channel = nil)
   logger.info(message)
-  channel ? slack.ping(message, channel: channel) : slack.ping(channel)
+  begin
+    slack.ping(message, channel: channel)
+  rescue
+    slack.ping(channel)
+  end
 end
 

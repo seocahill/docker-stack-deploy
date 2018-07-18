@@ -13,19 +13,20 @@ end
 
 post '/info' do
   service = params['text']
+  channel = params['channel_id']
   if service.nil? || service.empty?
     stdout, stderr, status = Open3.capture3('docker service ls')
   else
     stdout, stderr, status = Open3.capture3("docker service ps #{service}")
   end
-  status.success? ? notify("```#{stdout}```") : notify(stderr)
+  status.success? ? notify("```#{stdout}```", channel) : notify(stderr, channel)
   status
 end
 
 post '/deploy' do
   if login
     Thread.new { deploy }
-    [200, 'Working on it...']
+    [200, 'Deploying in the background, might take a while...']
   else
     [403, 'Error! docker login failed']
   end
@@ -34,7 +35,7 @@ end
 post '/update' do
   if login
     Thread.new { update(params) }
-    [200, 'Working on it...']
+    [200, 'Updating service in the background, might take a while...']
   else
     [403, 'Error! docker login failed']
   end
@@ -96,11 +97,11 @@ def current_image(service)
 end
 
 def slack
-  @slack ||= Slack::Notifier.new(ENV["WEBHOOK_URL"], channel: "#devops")
+  @slack ||= Slack::Notifier.new(ENV["WEBHOOK_URL"])
 end
 
-def notify(message)
+def notify(message, channel = nil)
   logger.info(message)
-  slack.ping(message)
+  channel ? slack.ping(message, channel: channel) : slack.ping(channel)
 end
 

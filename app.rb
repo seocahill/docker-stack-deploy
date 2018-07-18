@@ -32,7 +32,7 @@ end
 
 post '/update' do
   if login
-    Thread.new { update }
+    Thread.new { update(params) }
     [200]
   else
     [403, 'Error! docker login failed']
@@ -67,9 +67,11 @@ def login
 end
 
 def update(params)
-  # Only update whitelisted services
   service, tag = params.dig('text').split(':')
-  return [403, "Error! #{service} service is not whitelisted"] unless ENV['ALLOWED_SERVICES'].split(',').include?(service)
+
+  # Only update whitelisted services
+  whitelisted = ENV['ALLOWED_SERVICES'].split(',').include?(service)
+  return notify("```Error! #{service} service is not whitelisted```") unless whitelisted
 
   # Apply passed in or default tag
   image_name, image_tag = current_image(service).split(':')

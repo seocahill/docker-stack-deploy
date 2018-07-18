@@ -7,13 +7,13 @@ set :run, true
 set :bind, '0.0.0.0'
 
 before do
-  return unless params['token'] == %x{ cat /run/secrets/auth_token }
+  return if params['token'] == %x{ cat /run/secrets/auth_token }
   halt 401, "Not authorized\n"
 end
 
 post '/info' do
   service = params['text']
-  if service.empty?
+  if service.nil? || service.empty?
     stdout, stderr, status = Open3.capture3('docker service ls')
   else
     stdout, stderr, status = Open3.capture3("docker service ps #{service}")

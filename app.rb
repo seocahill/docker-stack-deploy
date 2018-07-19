@@ -51,8 +51,7 @@ def deploy
   remote = %x{ cat /run/secrets/github_uri }
   command = %Q{
     git checkout master &&
-    git fetch #{remote} &&
-    git reset --hard origin/master &&
+    git pull #{remote} master &&
     docker stack deploy -c $STACK_CONFIG_FILE $STACK_NAME --with-registry-auth
   }
 

@@ -64,8 +64,9 @@ def deploy
   end
 end
 
-def login 
+def login
   system "cat /run/secrets/dockerhub_password | docker login --username $DOCKER_USERNAME --password-stdin"
+  system "cat /run/secrets/gitlab_deploy_token | docker login registry.parashift.io --username $GITLAB_USERNAME --password-stdin"
   $?.exitstatus == 0
 end
 
